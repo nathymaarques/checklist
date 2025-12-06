@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Agenda Diária</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <style>
+    :root {
+      --bg: #f3f4f6;
+      --surface: #ffffff;
+      --text: #111827;
+      --text-muted: #6b7280;
+      --accent: #e25a50;
+      --accent-soft: #fee2e2;
+      --accent-strong: #b91c1c;
+      --border-soft: #e5e7eb;
+
+      --radius-card: 20px;
+      --radius-pill: 999px;
+      --shadow-soft: 0 16px 40px rgba(15, 23, 42, 0.12);
+
+      --fs-xs: 0.78rem;
+      --fs-sm: 0.85rem;
+      --fs-md: 0.95rem;
+      --fs-lg: 1.2rem;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      background: radial-gradient(circle at top, #fee2e2 0, #f3f4f6 40%, #e5e7eb 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 12px;
+      color: var(--text);
+    }
+
+    .agenda-layout {
+      width: 100%;
+      max-width: 720px;
+    }
+
+    .agenda-card {
+      background: var(--surface);
+      border-radius: var(--radius-card);
+      box-shadow: var(--shadow-soft);
+      padding: 18px 18px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    /* Cabeçalho */
+
+    .agenda-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .agenda-header h1 {
+      font-size: 1.3rem;
+    }
+
+    .agenda-header p {
+      font-size: var(--fs-sm);
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .agenda-tag {
+      font-size: var(--fs-xs);
+      padding: 6px 10px;
+      border-radius: var(--radius-pill);
+      background: #fff7f7;
+      border: 1px solid var(--accent-soft);
+      color: var(--accent-strong);
+    }
+
+    /* Formulário */
+
+    .agenda-form {
+      display: grid;
+      grid-template-columns: 120px 1fr 150px auto;
+      gap: 8px;
+      align-items: end;
+      margin-top: 4px;
+    }
+
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    label {
+      font-size: var(--fs-xs);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+    }
+
+    input,
+    select {
+      padding: 7px 9px;
+      border-radius: 10px;
+      border: 1px solid var(--border-soft);
+      font-size: var(--fs-sm);
+      outline: none;
+    }
+
+    input:focus,
+    select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px var(--accent-soft);
+    }
+
+    .btn-add {
+      padding: 9px 14px;
+      border-radius: 12px;
+      border: none;
+      background: var(--accent);
+      color: #ffffff;
+      font-size: var(--fs-sm);
+      cursor: pointer;
+      white-space: nowrap;
+      box-shadow: 0 2px 0 rgba(185, 28, 28, 0.6);
+      transition: 0.12s ease;
+    }
+
+    .btn-add:active {
+      transform: translateY(2px);
+      box-shadow: 0 0 0 rgba(185, 28, 28, 0.6);
+    }
+
+    .agenda-mensagem {
+      font-size: var(--fs-xs);
+      color: var(--accent-strong);
+      min-height: 14px;
+    }
+
+    /* Tabela */
+
+    .agenda-table-wrapper {
+      border-radius: 14px;
+      border: 1px solid var(--border-soft);
+      overflow: hidden;
+      margin-top: 4px;
+      background: #f9fafb;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: var(--fs-sm);
+    }
+
+    thead {
+      background: #eef2ff;
+    }
+
+    th,
+    td {
+      padding: 8px 10px;
+      text-align: left;
+      border-bottom: 1px solid var(--border-soft);
+    }
+
+    th {
+      font-weight: 600;
+      color: #374151;
+    }
+
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    .status-pill {
+      padding: 2px 8px;
+      border-radius: var(--radius-pill);
+      font-size: var(--fs-xs);
+      display: inline-block;
+    }
+
+    .status-pendente {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .status-concluida {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .acoes {
+      display: flex;
+      gap: 6px;
+    }
+
+    .btn-small {
+      font-size: var(--fs-xs);
+      padding: 4px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--border-soft);
+      background: #ffffff;
+      cursor: pointer;
+      transition: 0.12s ease;
+    }
+
+    .btn-small:hover {
+      background: #f3f4f6;
+    }
+
+    .linha-concluida td {
+      color: #9ca3af;
+      text-decoration: line-through;
+    }
+
+    /* Rodapé */
+
+    .agenda-footer {
+      border-top: 1px solid var(--border-soft);
+      padding-top: 8px;
+      margin-top: 6px;
+    }
+
+    .agenda-footer p {
+      font-size: var(--fs-xs);
+      color: var(--text-muted);
+    }
+
+    /* Responsivo */
+
+    @media (max-width: 640px) {
+      .agenda-card {
+        padding: 14px 12px 12px;
+      }
+
+      .agenda-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .agenda-form {
+        grid-template-columns: 1fr;
+      }
+
+      .btn-add {
+        width: 100%;
+      }
+
+      th:nth-child(3),
+      td:nth-child(3) {
+        display: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="agenda-layout">
+    <section class="agenda-card">
+      <header class="agenda-header">
+        <div>
+          <h1>Agenda diária</h1>
+          <p>Organize os compromissos do dia de forma simples e visual.</p>
+        </div>
+        <span class="agenda-tag">Projeto acadêmico · HTML, CSS e JS</span>
+      </header>
+
+      <!-- Formulário para adicionar compromisso -->
+      <form class="agenda-form" id="formAgenda">
+        <div class="field-group">
+          <label for="hora">Horário</label>
+          <input type="time" id="hora" name="hora" required />
+        </div>
+
+        <div class="field-group">
+          <label for="atividade">Atividade</label>
+          <input type="text" id="atividade" name="atividade" placeholder="Reunião, estudo, tarefa..." required />
+        </div>
+
+        <div class="field-group">
+          <label for="categoria">Categoria</label>
+          <select id="categoria" name="categoria">
+            <option value="">Sem categoria</option>
+            <option value="Trabalho">Trabalho</option>
+            <option value="Estudos">Estudos</option>
+            <option value="Pessoal">Pessoal</option>
+          </select>
+        </div>
+
+        <button type="submit" class="btn-add">Adicionar</button>
+      </form>
+
+      <div class="agenda-mensagem" id="mensagem"></div>
+
+      <!-- Tabela de compromissos -->
+      <div class="agenda-table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Horário</th>
+              <th>Atividade</th>
+              <th>Categoria</th>
+              <th>Status</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="corpoAgenda">
+            <!-- Linhas geradas via JavaScript -->
+          </tbody>
+        </table>
+      </div>
+
+      <footer class="agenda-footer">
+        <p>Esta agenda foi criada para praticar manipulação do DOM, formulários e atualização dinâmica de tabelas.</p>
+      </footer>
+    </section>
+  </main>
+
+  <script>
+    const form = document.getElementById("formAgenda");
+    const mensagemEl = document.getElementById("mensagem");
+    const corpoAgenda = document.getElementById("corpoAgenda");
+
+    const horaInput = document.getElementById("hora");
+    const atividadeInput = document.getElementById("atividade");
+    const categoriaSelect = document.getElementById("categoria");
+
+    let compromissos = [];
+
+    function mostrarMensagem(texto) {
+      mensagemEl.textContent = texto || "";
+    }
+
+    function limparFormulario() {
+      atividadeInput.value = "";
+      categoriaSelect.value = "";
+      // mantém o horário para facilitar ao adicionar vários seguidos
+    }
+
+    function ordenarCompromissos() {
+      compromissos.sort((a, b) => a.hora.localeCompare(b.hora));
+    }
+
+    function renderizarAgenda() {
+      corpoAgenda.innerHTML = "";
+
+      if (compromissos.length === 0) {
+        const tr = document.createElement("tr");
+        const td = document.createElement("td");
+        td.colSpan = 5;
+        td.textContent = "Nenhum compromisso adicionado ainda.";
+        td.style.fontSize = "0.85rem";
+        td.style.color = "#6b7280";
+        tr.appendChild(td);
+        corpoAgenda.appendChild(tr);
+        return;
+      }
+
+      compromissos.forEach((item) => {
+        const tr = document.createElement("tr");
+        if (item.concluida) {
+          tr.classList.add("linha-concluida");
+        }
+
+        const tdHora = document.createElement("td");
+        tdHora.textContent = item.hora;
+
+        const tdAtividade = document.createElement("td");
+        tdAtividade.textContent = item.atividade;
+
+        const tdCategoria = document.createElement("td");
+        tdCategoria.textContent = item.categoria || "—";
+
+        const tdStatus = document.createElement("td");
+        const spanStatus = document.createElement("span");
+        spanStatus.classList.add("status-pill");
+        if (item.concluida) {
+          spanStatus.classList.add("status-concluida");
+          spanStatus.textContent = "Concluída";
+        } else {
+          spanStatus.classList.add("status-pendente");
+          spanStatus.textContent = "Pendente";
+        }
+        tdStatus.appendChild(spanStatus);
+
+        const tdAcoes = document.createElement("td");
+        const divAcoes = document.createElement("div");
+        divAcoes.classList.add("acoes");
+
+        const btnStatus = document.createElement("button");
+        btnStatus.type = "button";
+        btnStatus.classList.add("btn-small");
+        btnStatus.textContent = item.concluida ? "Retomar" : "Concluir";
+        btnStatus.addEventListener("click", () => {
+          item.concluida = !item.concluida;
+          renderizarAgenda();
+        });
+
+        const btnRemover = document.createElement("button");
+        btnRemover.type = "button";
+        btnRemover.classList.add("btn-small");
+        btnRemover.textContent = "Remover";
+        btnRemover.addEventListener("click", () => {
+          compromissos = compromissos.filter((c) => c.id !== item.id);
+          renderizarAgenda();
+        });
+
+        divAcoes.appendChild(btnStatus);
+        divAcoes.appendChild(btnRemover);
+        tdAcoes.appendChild(divAcoes);
+
+        tr.appendChild(tdHora);
+        tr.appendChild(tdAtividade);
+        tr.appendChild(tdCategoria);
+        tr.appendChild(tdStatus);
+        tr.appendChild(tdAcoes);
+
+        corpoAgenda.appendChild(tr);
+      });
+    }
+
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      mostrarMensagem("");
+
+      const hora = horaInput.value;
+      const atividade = atividadeInput.value.trim();
+      const categoria = categoriaSelect.value;
+
+      if (!hora || !atividade) {
+        mostrarMensagem("Preencha pelo menos o horário e a atividade.");
+        return;
+      }
+
+      compromissos.push({
+        id: Date.now(),
+        hora,
+        atividade,
+        categoria,
+        concluida: false
+      });
+
+      ordenarCompromissos();
+      renderizarAgenda();
+      limparFormulario();
+    });
+
+    // Estado inicial
+    renderizarAgenda();
+  </script>
+</body>
+
+</html>
